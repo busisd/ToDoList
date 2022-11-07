@@ -10,24 +10,31 @@ export default function App() {
     <View style={styles.container}>
       <StatusBar style="dark" backgroundColor={`rgb(${red}, ${green}, ${blue})`} animated={true} />
       <Text>Choose your own colors!</Text>
-      <NumberInput setVal={setRed} />
-      <NumberInput setVal={setGreen} />
-      <NumberInput setVal={setBlue} />
+      <View style={styles.horizontalContainer}>
+        <NumberInput setVal={setRed} />
+        <NumberInput setVal={setGreen} />
+        <NumberInput setVal={setBlue} />
+      </View>
     </View>
   );
 }
 
-const NumberInput = ({ setVal = () => { } }) => (
-  <TextInput
-    defaultValue='0'
+const NumberInput = ({ setVal = () => { } }) => {
+  const [value, setValue] = useState("0");
+
+  return <TextInput
+    value={value}
     keyboardType='number-pad'
     style={styles.numberInput}
+    onChangeText={setValue}
     onEndEditing={(e) => {
-      const num = e?.nativeEvent?.text;
-      setVal(isNaN(num) ? 0 : boundNumber(num, 0, 255));
+      const inputNumber = e?.nativeEvent?.text;
+      const boundedInput = isNaN(inputNumber) ? 0 : boundNumber(inputNumber, 0, 255);
+      setVal(boundedInput);
+      setValue(boundedInput.toString());
     }}
   />
-)
+}
 
 const boundNumber = (num, min, max) =>
   Math.max(Math.min(num, max), min);
@@ -38,6 +45,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'flex-start',
+  },
+  horizontalContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    flexDirection: 'row'
   },
   numberInput: {
     borderColor: 'black',
