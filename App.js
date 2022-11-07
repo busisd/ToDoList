@@ -1,6 +1,6 @@
 import Checkbox from 'expo-checkbox';
 import { useState } from 'react';
-import { StyleSheet, Text, View, StatusBar, TextInput, FlatList } from 'react-native';
+import { StyleSheet, Text, View, StatusBar, TextInput, FlatList, TouchableOpacity } from 'react-native';
 
 const exampleListData = {
   title: "Find the rare crops",
@@ -29,20 +29,30 @@ const exampleListData = {
 };
 
 const TodoItem = ({ item, index, setListData }) => {
-  return <View style={[styles.todoListRow, ...(item.completed ? [{backgroundColor: "#ccffcc"}] : []) ]}>
+  return <TouchableOpacity activeOpacity={.5} style={[styles.todoListRow, ...(item.completed ? [{ backgroundColor: "#ccffcc" }] : [])]}
+    // TODO: replace with better setter
+    onPress={e => {
+      setListData(oldData => {
+        oldData.entries[index].completed = !oldData.entries[index].completed;
+        return { ...oldData };
+      });
+    }}>
     <Text style={styles.todoListText}>
       {item.content}
     </Text>
+    {/* TODO: replace with icon */}
     <Checkbox
+      disabled
       style={{ width: 24, height: 24 }}
       value={item.completed}
-      onValueChange={newValue => {
-        setListData(oldData => {
-          oldData.entries[index].completed = newValue;
-          return { ...oldData };
-        });
-      }} />
-  </View>
+    // onValueChange={newValue => {
+    //   setListData(oldData => {
+    //     oldData.entries[index].completed = newValue;
+    //     return { ...oldData };
+    //   });
+    // }} 
+    />
+  </TouchableOpacity>
 }
 
 export default function App() {
@@ -70,6 +80,7 @@ export default function App() {
     return (
       <View style={[styles.container, { width: "100%" }]}>
         <StatusBar style="dark" backgroundColor={`rgb(${red}, ${green}, ${blue})`} animated={true} />
+        {/* TODO: replace with always using SectionList */}
         <FlatList
           data={listData.entries}
           renderItem={({ item, index }) => <TodoItem item={item} index={index} setListData={setListData} />}
