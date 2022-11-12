@@ -1,42 +1,61 @@
 import Checkbox from 'expo-checkbox';
 import { useState } from 'react';
-import { StyleSheet, Text, View, StatusBar, TextInput, FlatList, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, StatusBar, TextInput, TouchableOpacity, SectionList, SafeAreaView } from 'react-native';
+import { AntDesign } from '@expo/vector-icons';
 
-const exampleListData = {
-  title: "Find the rare crops",
-  entries: [
-    {
-      id: "id001",
-      content: "Find the red acorn",
-      completed: true,
-    },
-    {
-      id: "id002",
-      content: "Find the orange lemon and this is a really long list item",
-      completed: false,
-    },
-    {
-      id: "id003",
-      content: "Find the blue carrot and this is an even longer list item. In fact, it's comprised of multiple sentences. Here are some more words: test test test test test.",
-      completed: true,
-    },
-    {
-      id: "id004",
-      content: "Find the green tomato",
-      completed: false,
-    },
-  ]
-};
+const exampleSectionListData = [
+  {
+    title: "Find the rare crops",
+    data: [
+      {
+        content: "Find the red acorn",
+        completed: false,
+      },
+      {
+        content: "Find the orange lemon and this is a really long list item",
+        completed: false,
+      },
+      {
+        content: "Find the blue carrot and this is an even longer list item. In fact, it's comprised of multiple sentences. Here are some more words: test test test test test.",
+        completed: false,
+      },
+      {
+        content: "Find the green tomato",
+        completed: false,
+      },
+    ],
+    index: 0,
+    showSection: true
+  },
+  {
+    title: "Find the lucky charms",
+    data: [
+      {
+        content: "Horseshoe",
+        completed: false
+      },
+      {
+        content: "Pot of gold",
+        completed: false,
+      },
+      {
+        content: "Clover",
+        completed: false,
+      },
+      {
+        content: "Magic hat",
+        completed: false,
+      },
+    ],
+    index: 1,
+    showSection: true
+  }
+];
 
-const TodoItem = ({ item, index, setListData }) => {
+const TodoItem = ({ item, index, onPress, show }) => {
+  if (!show) return null;
   return <TouchableOpacity activeOpacity={.5} style={[styles.todoListRow, ...(item.completed ? [{ backgroundColor: "#ccffcc" }] : [])]}
-    // TODO: replace with better setter
-    onPress={e => {
-      setListData(oldData => {
-        oldData.entries[index].completed = !oldData.entries[index].completed;
-        return { ...oldData };
-      });
-    }}>
+    onPress={onPress}>
     <Text style={styles.todoListText}>
       {item.content}
     </Text>
@@ -45,12 +64,6 @@ const TodoItem = ({ item, index, setListData }) => {
       disabled
       style={{ width: 24, height: 24 }}
       value={item.completed}
-    // onValueChange={newValue => {
-    //   setListData(oldData => {
-    //     oldData.entries[index].completed = newValue;
-    //     return { ...oldData };
-    //   });
-    // }} 
     />
   </TouchableOpacity>
 }
@@ -60,13 +73,13 @@ export default function App() {
   const [green, setGreen] = useState(0);
   const [blue, setBlue] = useState(0);
 
-  const [listData, setListData] = useState(exampleListData);
+  const [sectionListData, setSectionListData] = useState(exampleSectionListData);
 
   const page = 1;
 
   if (page === 0) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView View style={styles.container}>
         <StatusBar style="dark" backgroundColor={`rgb(${red}, ${green}, ${blue})`} animated={true} />
         <Text>Choose your own colors!</Text>
         <View style={styles.horizontalContainer}>
@@ -74,18 +87,31 @@ export default function App() {
           <NumberInput setVal={setGreen} />
           <NumberInput setVal={setBlue} />
         </View>
-      </View>
+      </SafeAreaView>
     );
   } else if (page === 1) {
     return (
-      <View style={[styles.container, { width: "100%" }]}>
+      <SafeAreaView style={[styles.container, { width: "100%" }]}>
         <StatusBar style="dark" backgroundColor={`rgb(${red}, ${green}, ${blue})`} animated={true} />
-        {/* TODO: replace with always using SectionList */}
-        <FlatList
-          data={listData.entries}
-          renderItem={({ item, index }) => <TodoItem item={item} index={index} setListData={setListData} />}
+        <SectionList
+          sections={sectionListData}
+          renderItem={({ item, index, section }) => <TodoItem item={item} index={index} show={section.showSection} onPress={() => setSectionListData(oldData => {
+            oldData[section.index].data[index].completed = !oldData[section.index].data[index].completed;
+            return [...oldData];
+          })} />}
+          renderSectionHeader={({ section }) => (
+            <TouchableOpacity activeOpacity={.5} onPress={() => setSectionListData(oldData => {
+              oldData[section.index].showSection = !oldData[section.index].showSection;
+              return [...oldData];
+            })}
+              style={[styles.todoListHeaderRow, { minWidth: "100%", paddingVertical: 4 }, ...section.data.every(item => item.completed) ? [{ backgroundColor: "#ccffcc" }] : []]}
+            >
+              <Text style={styles.todoListHeaderText}>{section.title}</Text>
+              <AntDesign name={section.showSection ? "minuscircleo" : "pluscircleo"} size={24} color="black" />
+            </TouchableOpacity>
+          )}
         />
-      </View>
+      </SafeAreaView>
     )
   }
 }
@@ -114,7 +140,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'flex-start',
   },
   horizontalContainer: {
@@ -123,6 +149,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
   },
+  todoListHeaderRow: {
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    flexDirection: 'row',
+    minWidth: "100%",
+    paddingHorizontal: 5
+  },
   todoListRow: {
     alignItems: 'center',
     justifyContent: 'flex-start',
@@ -130,8 +163,13 @@ const styles = StyleSheet.create({
     minWidth: "100%",
     paddingHorizontal: 10
   },
-  todoListText: {
+  todoListHeaderText: {
     fontSize: 24,
+    fontWeight: 'bold',
+    flex: 1
+  },
+  todoListText: {
+    fontSize: 20,
     flex: 1
   },
   numberInput: {
